@@ -1,0 +1,106 @@
+#!/bin/bash
+#PATH=/home/logan/bin/osys2022_assign2_output.txt
+
+#Sleep delay variable- Specifies the amount of time you would want to wait between commands when the sleep command is used
+DELAY=5
+
+#This set of commands will clear the terminal five seconds after you select an option. I then use cat to display my menu and _EOF_ to tell my shell im going to write a multiline string- i can stop
+#this by typing _EOF_ again at the end.
+while [[ "$REPLY" != 5 ]]; do
+         clear
+         cat <<-_EOF_
+
+Please Select:
+1. Kernel Information
+2. Free memory of your server
+3. Disk Space Utilization
+4. Top 5 Processes, Sorted by memory usage
+5. IP Address, Hostname, and current uptime
+6. Test your internet connection
+7. List and modify all current running services
+8. Quit
+_EOF_
+
+#This command asks a user for a prompt (which is why -p is there) and tells them to make a selection. So its reading the string you provide, and prompting the user with it via the terminal.
+        read -p "Enter a selection [1-8]>"
+#If the user types 1, it will display the kernel information for the system, and the sleep command suspends the calling of the process, or in easier terms, it pauses the script for a specified
+#period of time before continuing.  uname -a lists all possible information about the system (-a stands for All)
+#Shows all possible info about the kernal system. (If the reply is 1, then send the string to the terminal, display the uname info,  for 5 seconds, and continue the script.)
+#Continue is used to skip an iteration of the for/while/until/if/then loop
+#Fi simply finishes this loop.
+                 if [[ "$REPLY" == 1 ]]; then
+                          echo "Now displaying kernel information..."
+                          uname -a
+                          sleep "$DELAY"
+                          continue
+                 fi
+
+#The free command displays all RAM/memory that is currently free on the system. You can use
+#-g to display it in gb, -m to display it in megabytes, or --tera to display it in terabytes.
+#I chose MB for easier readability compared to KB.
+                 if [[ "$REPLY" == 2 ]]; then
+                         echo "Now displaying current free memory..."
+                         free -m
+                         sleep "$DELAY"
+                         continue
+                 fi
+#df -h is what allows you to display your current free storage space.
+#the -h is what specifies the output to be put into gb and mb so it can be easily read.
+                 if [[ "$REPLY" == 3 ]]; then
+                         echo "Now displaying current free storage space..."
+                         df -h
+                         sleep "$DELAY"
+                         continue
+                 fi
+#The ps aux command displays easily readable information about your systems running processes
+#--sort -%mem sorts all of the processes by the order of how much memory they use
+#the head command, by default, prints out the first 10 lines of the given input
+#using head -n 6 displays only the top 5 processes- you have to put 6 instead of 5, or only
+#4 actual processes will show up.
+                 if [[ "$REPLY" == 4 ]]; then
+                         echo "Now displaying the top 5 processes utilizing your memory.."
+                         ps aux --sort -%mem | head -n 6
+                         sleep "$DELAY"
+                         continue
+                 fi
+
+#Hostname -I displays only your IP address and nothing else, Hostname displays the servers
+#Hostname, and uptime shows the current uptime. the & symbols are for running multiple
+#Commands in one line
+                 if [[ "$REPLY" == 5 ]]; then
+                         echo "Now displaying your IP, hostname, and your current Up-Time of your machine"
+                         hostname -I && hostname && uptime
+                         sleep "$DELAY"
+                         continue
+                 fi
+#Pings googles DNS server to test your connection. -q makes no output appear from the ping to the shell, -c 2 makes it only ping twice, and >/dev/null sends the output to this file which
+#Essentially throws it into an endless void, never to be seen again. || allows the second echo only to initiate if your connection failed.
+                 if [[ "$REPLY" == 6 ]]; then
+                          ping -q -c 2 8.8.8.8&>/dev/null && echo "Connection Successful" || echo "Connection failed miserably."
+                          sleep "$DELAY"
+                          continue
+                 fi
+#This command group lists all currently running services and lets you decide on if you would like to stop, start, or restart these.
+#This is achieved in a few ways- first, we use the command systemctl list-units --type=service --all --no-pager
+#to list every service running on the system. read service will take whatever input the user
+#supplies and uses it for the desired server name. Action works the same, it takes the
+#action a user types and uses it for the desired action.
+#Next, the command systemctl is-active $service will take the service name once again,
+#and this time it will use it to tell you if the service is active or not
+                 if [[ "$REPLY" == 7 ]]; then
+                          echo "All currently running services"
+                          systemctl list-units --type=service --all --no-pager
+                          echo "Choose a service to manage"
+                          read service; echo "$service has been selected. Would you like to start, stop, or restart it?"; read action
+                          systemctl $action $service
+                          echo "$service is "; systemctl is-active $service
+                          sleep "$DELAY"
+                          continue
+                 fi
+
+#
+                 if [[ "$REPLY" == 8 ]]; then
+                          echo "Exiting..."
+                          exit
+                 fi
+done
